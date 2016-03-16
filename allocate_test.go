@@ -13,7 +13,7 @@ import (
 	"fmt"
 )
 
-func ExampleBasicZero() {
+func ExampleZero() {
 	type SimplePtrStruct struct {
 		PtrField *int
 	}
