@@ -38,14 +38,14 @@ func Zero(inputIntf interface{}) error {
 
 	// allocate each of the structs fields
 	for i := 0; i < indirectVal.NumField(); i++ {
-		f := indirectVal.Field(i)
-		if f.Kind() == reflect.Ptr && f.IsNil() {
-			f.Set(reflect.New(f.Type().Elem()))
+		field := indirectVal.Field(i)
+		if field.Kind() == reflect.Ptr && field.IsNil() {
+			field.Set(reflect.New(field.Type().Elem()))
 		}
-		i := reflect.Indirect(f)
-		if i.Kind() == reflect.Struct {
+		indirectField := reflect.Indirect(field)
+		if indirectField.Kind() == reflect.Struct {
 			// recursively allocate each of the structs embedded fields
-			err := Zero(f.Interface())
+			err := Zero(field.Interface())
 			if err != nil {
 				return err
 			}
