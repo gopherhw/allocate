@@ -68,25 +68,18 @@ type AllBuiltinTypes struct {
 func TestZeroWithAllBuiltinTypesStruct(t *testing.T) {
 	allBuiltins := new(AllBuiltinTypes)
 	Zero(allBuiltins)
+	checkAllBuiltins(t, allBuiltins)
+}
 
-	// for all pointer fields, check that the dereferenced pointer
-	// equals the non-pointer fields
-	allBuiltinsVal := reflect.Indirect(reflect.ValueOf(allBuiltins))
-	for i := 0; i < allBuiltinsVal.NumField(); i++ {
-		field := allBuiltinsVal.Field(i)
-		if field.Kind() != reflect.Ptr {
-			continue
-		}
-		fieldName := allBuiltinsVal.Type().Field(i).Name
-		nonPtrFieldName := strings.TrimSuffix(fieldName, "Ptr") + "Type"
-		nonPtrField := allBuiltinsVal.FieldByName(nonPtrFieldName)
-
-		// compare the pointer vs non-pointer init values
-		if !reflect.DeepEqual(nonPtrField.Interface(), field.Elem().Interface()) {
-			t.Errorf("Builtin pointer to struct field '%s' not initialized to its zero value: %v",
-				fieldName, field.Elem())
-		}
+// TestZeroWithEmbeddedBuiltinTypesStruct is the same test as TestZeroWithAllBuiltinTypesStruct
+// except the struct is embedded as a pointer field in a wrapper struct
+func TestZeroWithEmbeddedBuiltinTypesStruct(t *testing.T) {
+	type WrapperStruct struct {
+		AllBuiltins *AllBuiltinTypes
 	}
+	wrapStruct := new(WrapperStruct)
+	Zero(wrapStruct)
+	checkAllBuiltins(t, wrapStruct.AllBuiltins)
 }
 
 // TestZeroWithMapField tests `Zero` with a struct field that is a map
@@ -94,11 +87,8 @@ func TestZeroWithMapField(t *testing.T) {
 	type MapFieldStruct struct {
 		MapField map[string]int
 	}
-
 	simpleMapStruct := new(MapFieldStruct)
-
 	Zero(simpleMapStruct)
-
 	// This would panic if executed pre-Zero
 	simpleMapStruct.MapField["test"] = 25
 }
@@ -108,11 +98,8 @@ func TestZeroWithPointerMapField(t *testing.T) {
 	type PtrMapFieldStruct struct {
 		MapField *map[string]int
 	}
-
 	ptrMapStruct := new(PtrMapFieldStruct)
-
 	Zero(ptrMapStruct)
-
 	// This would panic if executed pre-Zero
 	(*ptrMapStruct.MapField)["test"] = 25
 }
@@ -141,6 +128,7 @@ func TestZeroWithPrivateField(t *testing.T) {
 	}
 }
 
+// ExampleZero is a zipmle example to demonstrate the how Zero() performs allocation
 func ExampleZero() {
 	type SimplePtrStruct struct {
 		PtrField *int
@@ -156,4 +144,25 @@ func ExampleZero() {
 	// pre allocate.Zero: <nil>
 	// post allocate.Zero: 0
 
+}
+
+func checkAllBuiltins(t *testing.T, allBuiltins *AllBuiltinTypes) {
+	// for all pointer fields, check that the dereferenced pointer
+	// equals the non-pointer fields
+	allBuiltinsVal := reflect.Indirect(reflect.ValueOf(allBuiltins))
+	for i := 0; i < allBuiltinsVal.NumField(); i++ {
+		field := allBuiltinsVal.Field(i)
+		if field.Kind() != reflect.Ptr {
+			continue
+		}
+		fieldName := allBuiltinsVal.Type().Field(i).Name
+		nonPtrFieldName := strings.TrimSuffix(fieldName, "Ptr") + "Type"
+		nonPtrField := allBuiltinsVal.FieldByName(nonPtrFieldName)
+
+		// compare the pointer vs non-pointer init values
+		if !reflect.DeepEqual(nonPtrField.Interface(), field.Elem().Interface()) {
+			t.Errorf("Builtin pointer to struct field '%s' not initialized to its zero value: %v",
+				fieldName, field.Elem())
+		}
+	}
 }

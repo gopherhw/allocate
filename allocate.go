@@ -37,6 +37,8 @@ func Zero(inputIntf interface{}) error {
 	var err error
 	for i := 0; i < indirectVal.NumField(); i++ {
 		field := indirectVal.Field(i)
+
+		// pre-allocate pointer fields
 		if field.Kind() == reflect.Ptr && field.IsNil() {
 			if field.CanSet() {
 				field.Set(reflect.New(field.Type().Elem()))
