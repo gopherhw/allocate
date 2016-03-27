@@ -62,7 +62,7 @@ type AllBuiltinTypes struct {
 	UintptrType    uintptr
 }
 
-// This test uses AllBuiltinTypes to test that all of the pointer struct fields
+// TestZeroWithAllBuiltinTypesStruct uses AllBuiltinTypes to test that all of the pointer struct fields
 // in AllBuiltinTypes initialize to the same value as all of the non-pointers
 // when the `Zero` function is called.
 func TestZeroWithAllBuiltinTypesStruct(t *testing.T) {
@@ -83,8 +83,33 @@ func TestZeroWithAllBuiltinTypesStruct(t *testing.T) {
 
 		// compare the pointer vs non-pointer init values
 		if !reflect.DeepEqual(nonPtrField.Interface(), field.Elem().Interface()) {
-			t.Errorf("Builtin pointer to struct field '%s' not initialized to its zero value: %v", fieldName, field.Elem())
+			t.Errorf("Builtin pointer to struct field '%s' not initialized to its zero value: %v",
+				fieldName, field.Elem())
 		}
+	}
+}
+
+// TestZeroWithPrivateField tests that a private field is not allocated
+// using `Zero` but a public field is allocated.
+func TestZeroWithPrivateField(t *testing.T) {
+	type PrivateFieldStruct struct {
+		privField   *int
+		PublicField *int
+	}
+	pfstruct := new(PrivateFieldStruct)
+
+	err := Zero(pfstruct)
+
+	if err != nil {
+		t.Errorf("Private field struct produced error: %v", err)
+	}
+
+	if pfstruct.privField != nil {
+		t.Errorf("Private field is not nil: %v", pfstruct.privField)
+	}
+
+	if pfstruct.PublicField == nil || *pfstruct.PublicField != 0 {
+		t.Errorf("Public field was not allocated correctly: %v", pfstruct.PublicField)
 	}
 }
 

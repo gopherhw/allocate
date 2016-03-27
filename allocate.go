@@ -1,10 +1,6 @@
 /*
 
-The allocate library provides helper functions for allocation/initializing
-arbitrary structures.
-
-TODO(cjrd)
-Add an allocate.Random() function that assigns random values rather than nil values
+The allocate library provides helper functions for allocation/initializing structs.
 
 @author Colorado Reed (colorado at dotdashpay ... com)
 
@@ -24,6 +20,7 @@ import (
 // the pointer contains a pointer to an initialized value,
 // e.g. an *int field will be a pointer to 0 instead of a nil pointer.
 //
+// Zero does not allocate private fields.
 func Zero(inputIntf interface{}) error {
 	indirectVal := reflect.Indirect(reflect.ValueOf(inputIntf))
 
@@ -40,16 +37,22 @@ func Zero(inputIntf interface{}) error {
 	for i := 0; i < indirectVal.NumField(); i++ {
 		field := indirectVal.Field(i)
 		if field.Kind() == reflect.Ptr && field.IsNil() {
-			field.Set(reflect.New(field.Type().Elem()))
-		}
-		indirectField := reflect.Indirect(field)
-		if indirectField.Kind() == reflect.Struct {
-			// recursively allocate each of the structs embedded fields
-			err := Zero(field.Interface())
-			if err != nil {
-				return err
+			if field.CanSet() {
+				field.Set(reflect.New(field.Type().Elem()))
+			}
+		} else {
+			indirectField := reflect.Indirect(field)
+			if indirectField.Kind() == reflect.Struct {
+				// recursively allocate each of the structs embedded fields
+				err := Zero(field.Interface())
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 	return nil
 }
+
+// TODO(cjrd)
+// Add an allocate.Random() function that assigns random values rather than nil values
