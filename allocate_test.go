@@ -89,6 +89,34 @@ func TestZeroWithAllBuiltinTypesStruct(t *testing.T) {
 	}
 }
 
+// TestZeroWithMapField tests `Zero` with a struct field that is a map
+func TestZeroWithMapField(t *testing.T) {
+	type MapFieldStruct struct {
+		MapField map[string]int
+	}
+
+	simpleMapStruct := new(MapFieldStruct)
+
+	Zero(simpleMapStruct)
+
+	// This would panic if executed pre-Zero
+	simpleMapStruct.MapField["test"] = 25
+}
+
+// TestZeroWithPointerMapField tests `Zero` with a struct field that is a pointer to a map
+func TestZeroWithPointerMapField(t *testing.T) {
+	type PtrMapFieldStruct struct {
+		MapField *map[string]int
+	}
+
+	ptrMapStruct := new(PtrMapFieldStruct)
+
+	Zero(ptrMapStruct)
+
+	// This would panic if executed pre-Zero
+	(*ptrMapStruct.MapField)["test"] = 25
+}
+
 // TestZeroWithPrivateField tests that a private field is not allocated
 // using `Zero` but a public field is allocated.
 func TestZeroWithPrivateField(t *testing.T) {

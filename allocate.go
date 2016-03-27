@@ -29,29 +29,30 @@ func Zero(inputIntf interface{}) error {
 			inputIntf)
 	}
 	if indirectVal.Kind() != reflect.Struct {
-		return fmt.Errorf("allocate.Zero only works with structs, not type %v",
+		return fmt.Errorf("allocate.Zero currently only works with structs, not type %v",
 			indirectVal.Kind())
 	}
 
 	// allocate each of the structs fields
+	var err error
 	for i := 0; i < indirectVal.NumField(); i++ {
 		field := indirectVal.Field(i)
 		if field.Kind() == reflect.Ptr && field.IsNil() {
 			if field.CanSet() {
 				field.Set(reflect.New(field.Type().Elem()))
 			}
-		} else {
-			indirectField := reflect.Indirect(field)
-			if indirectField.Kind() == reflect.Struct {
-				// recursively allocate each of the structs embedded fields
-				err := Zero(field.Interface())
-				if err != nil {
-					return err
-				}
-			}
+		}
+
+		indirectField := reflect.Indirect(field)
+		switch indirectField.Kind() {
+		case reflect.Map:
+			indirectField.Set(reflect.MakeMap(indirectField.Type()))
+		case reflect.Struct:
+			// recursively allocate each of the structs embedded fields
+			err = Zero(field.Interface())
 		}
 	}
-	return nil
+	return err
 }
 
 // TODO(cjrd)
