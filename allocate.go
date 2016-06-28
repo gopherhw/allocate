@@ -29,7 +29,7 @@ func Zero(inputIntf interface{}) error {
 			inputIntf)
 	}
 	if indirectVal.Kind() != reflect.Struct {
-		return fmt.Errorf("allocate.Zero currently only works with structs, not type %v",
+		return fmt.Errorf("allocate.Zero currently only works with [pointers to] structs, not type %v",
 			indirectVal.Kind())
 	}
 

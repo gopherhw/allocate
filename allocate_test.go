@@ -128,7 +128,21 @@ func TestZeroWithPrivateField(t *testing.T) {
 	}
 }
 
-// ExampleZero is a zipmle example to demonstrate the how Zero() performs allocation
+// TestInvalidType tests calling Zero with a
+// type where the memory address cannot be set
+func TestZeroNonAddressableError(t *testing.T) {
+	var someInt int
+	err := Zero(someInt)
+	if err != nil {
+		t.Errorf("Trying to Zero() an int should return an error")
+	}
+}
+
+//
+// Examples
+//
+
+// ExampleZero is a simple example to demonstrate the how Zero() performs allocation
 func ExampleZero() {
 	type SimplePtrStruct struct {
 		PtrField *int
@@ -145,6 +159,10 @@ func ExampleZero() {
 	// post allocate.Zero: 0
 
 }
+
+//
+// Helpers
+//
 
 func checkAllBuiltins(t *testing.T, allBuiltins *AllBuiltinTypes) {
 	// for all pointer fields, check that the dereferenced pointer
