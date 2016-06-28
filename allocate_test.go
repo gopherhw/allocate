@@ -128,13 +128,22 @@ func TestZeroWithPrivateField(t *testing.T) {
 	}
 }
 
-// TestInvalidType tests calling Zero with a
+// TestZeroNonAddressableError tests calling Zero with a
 // type where the memory address cannot be set
 func TestZeroNonAddressableError(t *testing.T) {
 	var someInt int
 	err := Zero(someInt)
-	if err != nil {
+	if err == nil {
 		t.Errorf("Trying to Zero() an int should return an error")
+	}
+}
+
+// TestZeroNonStruct tests
+func TestZeroNonStruct(t *testing.T) {
+	var someMap *map[string]int
+	err := Zero(someMap)
+	if err == nil {
+		t.Errorf("Trying to Zero() with a non-struct type should return an error")
 	}
 }
 
