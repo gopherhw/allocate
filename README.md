@@ -7,8 +7,33 @@
 
 Allocate provides simple helper functions for allocating go structures so that pointer fields are pointers to zero'd values instead of `nil`.
 
-WARNING: This library is pre-1.0, so I would advise against using this in
-production right now (it's great for testing your production code,
-though, e.g. allocating structs used in your tests).
+### Example
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/cjrd/allocate"
+)
+
+func main() {
+	type SimplePtrStruct struct {
+		PtrField *int
+	}
+
+	ptrStruct := SimplePtrStruct{}
+
+	fmt.Printf("pre allocate.Zero: %v\n", ptrStruct.PtrField)
+	allocate.Zero(&ptrStruct)
+	fmt.Printf("post allocate.Zero: %v\n", *ptrStruct.PtrField)
+}
+
+```
+
+```bash
+# OUTPUT
+pre allocate.Zero: <nil>
+post allocate.Zero: 0
+```
 
 See the godoc's for more information: https://godoc.org/github.com/cjrd/allocate
