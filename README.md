@@ -11,8 +11,9 @@ Allocate provides functions for allocating golang structs so that pointer fields
 ### Use Cases
 
 * Initializing structures that contain any type of pointer fields, including recursive struct fields
-* Preventing panics by ensuring that all fields are initialized
+* Preventing panics by ensuring that all fields of a struct are initialized
 * Initializing [golang protobuf struct](https://github.com/golang/protobuf) (the golang protobuf makes heavy use of pointers to embedded structs that contain pointers to embedded structs, ad infinitum)
+* Initializing structs for black box testing (see also https://golang.org/pkg/testing/quick/)
 
 ### Example
 ```go
