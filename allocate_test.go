@@ -194,6 +194,18 @@ func TestZeroWithErrorCover(t *testing.T) {
 	assert.NotEqual(t, err, nil)
 }
 
+func TestMustZero(t *testing.T) {
+    var a int
+    defer func(){
+        if r := recover(); r !=nil {
+            t.Log("success panic")
+        } else{
+            t.Errorf("Trying to MustZero() with a non-struct type should panic")
+        }
+    }()
+    MustZero(&a)
+}
+
 //
 // Examples
 //

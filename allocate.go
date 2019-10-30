@@ -70,5 +70,13 @@ func Zero(inputIntf interface{}) error {
 	return err
 }
 
+// MustZero will panic instead of return error
+func MustZero(inputIntf interface{}) {
+	err := Zero(inputIntf)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // TODO(cjrd)
 // Add an allocate.Random() function that assigns random values rather than nil values
