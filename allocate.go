@@ -51,10 +51,31 @@ func Zero(inputIntf interface{}) error {
 			indirectField.Set(reflect.MakeMap(indirectField.Type()))
 		case reflect.Struct:
 			// recursively allocate each of the structs embedded fields
-			err = Zero(field.Interface())
+			if field.Kind() == reflect.Ptr {
+				err = Zero(field.Interface())
+			} else {
+				// field of Struct can always use field.Addr()
+				fieldAddr := field.Addr()
+				if fieldAddr.CanInterface() {
+					err = Zero(fieldAddr.Interface())
+				} else {
+					err = fmt.Errorf("struct field can't interface, %#v", fieldAddr)
+				}
+			}
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return err
+}
+
+// MustZero will panic instead of return error
+func MustZero(inputIntf interface{}) {
+	err := Zero(inputIntf)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // TODO(cjrd)

@@ -14,6 +14,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type AllBuiltinTypes struct {
@@ -145,6 +147,63 @@ func TestZeroNonStruct(t *testing.T) {
 	if err == nil {
 		t.Errorf("Trying to Zero() with a non-struct type should return an error")
 	}
+}
+
+func TestZeroWithSubStruct(t *testing.T) {
+	type SubStruct struct {
+		IntPtr *int
+	}
+	type StrucWithSubStruct struct {
+		Sub SubStruct
+	}
+	strucWithSubStruct := StrucWithSubStruct{}
+	if strucWithSubStruct.Sub.IntPtr != nil {
+		t.Errorf("strucWithSubStruct.Sub.IntPtr should be nil before Zero")
+	}
+	err := Zero(&strucWithSubStruct)
+	assert.Equal(t, err, nil)
+	if strucWithSubStruct.Sub.IntPtr == nil {
+		t.Errorf("strucWithSubStruct.Sub.IntPtr not Success initlized")
+	}
+}
+
+func TestZeroWithPrivateSubStruct(t *testing.T) {
+	type SubStruct struct {
+		IntPtr *int
+	}
+	type StrucWithSubStruct struct {
+		sub SubStruct
+	}
+	strucWithSubStruct := StrucWithSubStruct{}
+	err := Zero(&strucWithSubStruct)
+	t.Log(err)
+	assert.NotEqual(t, err, nil)
+}
+
+func TestZeroWithErrorCover(t *testing.T) {
+	type SubStruct struct {
+		IntPtr *int
+	}
+	type StrucWithSubStruct struct {
+		sub SubStruct
+		Sub SubStruct // may cover the origin error
+	}
+	strucWithSubStruct := StrucWithSubStruct{}
+	err := Zero(&strucWithSubStruct)
+	t.Log(err)
+	assert.NotEqual(t, err, nil)
+}
+
+func TestMustZero(t *testing.T) {
+    var a int
+    defer func(){
+        if r := recover(); r !=nil {
+            t.Log("success panic")
+        } else{
+            t.Errorf("Trying to MustZero() with a non-struct type should panic")
+        }
+    }()
+    MustZero(&a)
 }
 
 //
