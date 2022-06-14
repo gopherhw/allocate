@@ -22,6 +22,11 @@ import (
 //
 // Zero does not allocate private fields.
 func Zero(inputIntf interface{}) error {
+	return zero(inputIntf, map[string]bool{})
+}
+
+// zero .
+func zero(inputIntf interface{}, fieldTypeMap map[string]bool) error {
 	indirectVal := reflect.Indirect(reflect.ValueOf(inputIntf))
 
 	if !indirectVal.CanSet() {
@@ -32,7 +37,7 @@ func Zero(inputIntf interface{}) error {
 		return fmt.Errorf("allocate.Zero currently only works with [pointers to] structs, not type %v",
 			indirectVal.Kind())
 	}
-
+	fieldTypeMap[reflect.ValueOf(inputIntf).Type().String()] = true
 	// allocate each of the structs fields
 	var err error
 	for i := 0; i < indirectVal.NumField(); i++ {
@@ -40,6 +45,13 @@ func Zero(inputIntf interface{}) error {
 
 		// pre-allocate pointer fields
 		if field.Kind() == reflect.Ptr && field.IsNil() {
+			if field.Type().Elem().Kind() == reflect.Struct {
+				if fieldTypeMap[field.Type().String()] {
+					continue
+				}
+				fieldTypeMap[field.Type().String()] = true
+			}
+
 			if field.CanSet() {
 				field.Set(reflect.New(field.Type().Elem()))
 			}
@@ -52,12 +64,12 @@ func Zero(inputIntf interface{}) error {
 		case reflect.Struct:
 			// recursively allocate each of the structs embedded fields
 			if field.Kind() == reflect.Ptr {
-				err = Zero(field.Interface())
+				err = zero(field.Interface(), fieldTypeMap)
 			} else {
 				// field of Struct can always use field.Addr()
 				fieldAddr := field.Addr()
 				if fieldAddr.CanInterface() {
-					err = Zero(fieldAddr.Interface())
+					err = zero(fieldAddr.Interface(), fieldTypeMap)
 				} else {
 					err = fmt.Errorf("struct field can't interface, %#v", fieldAddr)
 				}

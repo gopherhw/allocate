@@ -195,15 +195,15 @@ func TestZeroWithErrorCover(t *testing.T) {
 }
 
 func TestMustZero(t *testing.T) {
-    var a int
-    defer func(){
-        if r := recover(); r !=nil {
-            t.Log("success panic")
-        } else{
-            t.Errorf("Trying to MustZero() with a non-struct type should panic")
-        }
-    }()
-    MustZero(&a)
+	var a int
+	defer func() {
+		if r := recover(); r != nil {
+			t.Log("success panic")
+		} else {
+			t.Errorf("Trying to MustZero() with a non-struct type should panic")
+		}
+	}()
+	MustZero(&a)
 }
 
 //
@@ -251,4 +251,29 @@ func checkAllBuiltins(t *testing.T, allBuiltins *AllBuiltinTypes) {
 				fieldName, field.Elem())
 		}
 	}
+}
+
+func TestZeroCircularDependencyStructure(t *testing.T) {
+	type Info struct {
+		Age *int
+	}
+
+	type Node struct {
+		ID   *int
+		A    *Node
+		B    *Node
+		C    *Node
+		Info *Info
+	}
+	var node Node
+	err := Zero(&node)
+	if err != nil {
+		t.Errorf("zero faild")
+	}
+
+	t.Logf("node.A:%+v", node.A)
+	t.Logf("node.B:%+v", node.B)
+	t.Logf("node.C:%+v", node.C)
+	t.Logf("node.Info:%+v", node.Info)
+	t.Logf("node:%+v", node)
 }
