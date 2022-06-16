@@ -11,6 +11,7 @@ https://groups.google.com/forum/#!topic/golang-nuts/Wd9jiZswwMU
 package allocate
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 )
@@ -22,11 +23,11 @@ import (
 //
 // Zero does not allocate private fields.
 func Zero(inputIntf interface{}) error {
-	return zero(inputIntf, map[string]bool{})
+	return zero(context.Background(), inputIntf)
 }
 
 // zero .
-func zero(inputIntf interface{}, fieldTypeMap map[string]bool) error {
+func zero(ctx context.Context, inputIntf interface{}) error {
 	indirectVal := reflect.Indirect(reflect.ValueOf(inputIntf))
 
 	if !indirectVal.CanSet() {
@@ -37,19 +38,20 @@ func zero(inputIntf interface{}, fieldTypeMap map[string]bool) error {
 		return fmt.Errorf("allocate.Zero currently only works with [pointers to] structs, not type %v",
 			indirectVal.Kind())
 	}
-	fieldTypeMap[reflect.ValueOf(inputIntf).Type().String()] = true
+	ctx = context.WithValue(ctx, reflect.ValueOf(inputIntf).Type().String(), true)
 	// allocate each of the structs fields
 	var err error
 	for i := 0; i < indirectVal.NumField(); i++ {
 		field := indirectVal.Field(i)
-
+		ctxWithValue := ctx
 		// pre-allocate pointer fields
 		if field.Kind() == reflect.Ptr && field.IsNil() {
 			if field.Type().Elem().Kind() == reflect.Struct {
-				if fieldTypeMap[field.Type().String()] {
+				get := ctx.Value(field.Type().String())
+				if v, ok := get.(bool); ok && v {
 					continue
 				}
-				fieldTypeMap[field.Type().String()] = true
+				ctxWithValue = context.WithValue(ctxWithValue, field.Type().String(), true)
 			}
 
 			if field.CanSet() {
@@ -64,12 +66,12 @@ func zero(inputIntf interface{}, fieldTypeMap map[string]bool) error {
 		case reflect.Struct:
 			// recursively allocate each of the structs embedded fields
 			if field.Kind() == reflect.Ptr {
-				err = zero(field.Interface(), fieldTypeMap)
+				err = zero(ctxWithValue, field.Interface())
 			} else {
 				// field of Struct can always use field.Addr()
 				fieldAddr := field.Addr()
 				if fieldAddr.CanInterface() {
-					err = zero(fieldAddr.Interface(), fieldTypeMap)
+					err = zero(ctxWithValue, fieldAddr.Interface())
 				} else {
 					err = fmt.Errorf("struct field can't interface, %#v", fieldAddr)
 				}

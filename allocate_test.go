@@ -259,11 +259,12 @@ func TestZeroCircularDependencyStructure(t *testing.T) {
 	}
 
 	type Node struct {
-		ID   *int
-		A    *Node
-		B    *Node
-		C    *Node
-		Info *Info
+		ID    *int
+		A     *Node
+		B     *Node
+		C     *Node
+		InfoX Info
+		Info  *Info
 	}
 	var node Node
 	err := Zero(&node)
@@ -274,6 +275,7 @@ func TestZeroCircularDependencyStructure(t *testing.T) {
 	t.Logf("node.A:%+v", node.A)
 	t.Logf("node.B:%+v", node.B)
 	t.Logf("node.C:%+v", node.C)
-	t.Logf("node.Info:%+v", node.Info)
+	t.Logf("node.Info:%+v", node.Info.Age)
+	t.Logf("node.InfoX:%+v", node.InfoX.Age)
 	t.Logf("node:%+v", node)
 }
